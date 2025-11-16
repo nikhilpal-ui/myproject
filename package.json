@@ -1,0 +1,16 @@
+{
+  "name": "tailwind-daisyui-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/styles.scss -o ./dist/styles.css --minify",
+    "watch:css": "tailwindcss -i ./src/styles.scss -o ./dist/styles.css --watch"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "daisyui": "^2.57.0",
+    "postcss": "^8.4.24",
+    "tailwindcss": "^3.4.7",
+    "sass": "^1.66.1"
+  }
+}

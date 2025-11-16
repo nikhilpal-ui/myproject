@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Reset Password — Stylish UI</title>
+
+  <script> tailwind = { config:{ darkMode:"class" } }; </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root { --brand-500:#7b5bf0; }
+    html,body { transition: color .25s ease; }
+
+    body {
+      background: linear-gradient(135deg, var(--page-bg,#ffffff), var(--brand-500));
+      background-size: cover;
+      background-attachment: fixed;
+    }
+
+    .glass { background: rgba(255,255,255,0.15); backdrop-filter: blur(14px); border:1px solid rgba(255,255,255,0.25); transform:none; }
+    .neon { transition: box-shadow .18s ease; transform:none; }
+    .neon:hover { box-shadow: 0 0 14px var(--brand-500); }
+
+    .btn-accent { background: var(--brand-500); color:#fff; }
+  </style>
+
+  <script>
+    (function(){
+      const THEME='site-theme', BG='site-bgcolor', BRAND='brand-color';
+      const t = localStorage.getItem(THEME) || "light";
+      document.documentElement.classList.toggle('dark', t === "dark");
+
+      const bg = localStorage.getItem(BG);
+      if(bg) document.documentElement.style.setProperty("--page-bg", bg);
+
+      const brand = localStorage.getItem(BRAND);
+      if(brand) document.documentElement.style.setProperty("--brand-500", brand);
+    })();
+  </script>
+</head>
+
+<body class="text-slate-900 dark:text-slate-100">
+<nav class="glass shadow-lg sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+    <a href="index.html" class="text-2xl font-extrabold">My Website</a>
+
+    <div class="flex items-center gap-3">
+      <input id="brandPicker" type="color" class="w-8 h-8 rounded cursor-pointer" title="Accent color"/>
+      <input id="bgPicker" type="color" class="w-8 h-8 rounded cursor-pointer" title="Background color"/>
+      <button id="themeBtn" onclick="toggleTheme()" class="px-3 py-1 border rounded">🌙 Dark</button>
+      <button id="mobileToggle" class="md:hidden px-2 py-1 border rounded">☰</button>
+    </div>
+  </div>
+
+  <div id="mobileMenu" class="hidden md:hidden p-4 space-y-2 glass">
+    <a href="login.html" class="block p-2">Login</a>
+    <a href="register.html" class="block p-2">Register</a>
+  </div>
+</nav>
+
+<section class="flex justify-center items-center min-h-[80vh] px-4 py-10">
+  <div class="glass rounded-2xl p-10 w-full max-w-md shadow-xl neon">
+    <h1 class="text-3xl font-bold text-center mb-2">Reset Password</h1>
+    <p class="text-center text-slate-700 dark:text-slate-300 mb-6">Enter your new password below.</p>
+
+    <form id="resetForm">
+      <label class="text-sm opacity-90">New Password</label>
+      <input type="password" id="newPass" placeholder="Enter new password" class="w-full mt-1 mb-4 p-3 rounded-lg bg-white/40 dark:bg-slate-800/40 border outline-none" required>
+
+      <label class="text-sm opacity-90">Confirm Password</label>
+      <input type="password" id="confirmPass" placeholder="Confirm password" class="w-full mt-1 p-3 rounded-lg bg-white/40 dark:bg-slate-800/40 border outline-none" required>
+
+      <button class="w-full mt-6 py-3 rounded-lg btn-accent neon shadow-lg text-lg font-semibold">Reset Password</button>
+    </form>
+
+    <p class="mt-6 text-center text-sm opacity-90">Back to login? <a href="login.html" class="font-semibold hover:underline">Login</a></p>
+  </div>
+</section>
+
+<footer class="py-6 text-center opacity-75 text-sm">© 2025 Stylish Reset Page — Tailwind UI</footer>
+
+<script>
+  const BG='site-bgcolor', BRAND='brand-color', THEME='site-theme';
+
+  function toggleTheme(){
+    const isDark = document.documentElement.classList.toggle("dark");
+    localStorage.setItem(THEME, isDark ? "dark" : "light");
+    if(document.getElementById('themeBtn')) document.getElementById('themeBtn').textContent = isDark ? "☀️ Light" : "🌙 Dark";
+  }
+
+  document.getElementById('mobileToggle')?.addEventListener('click', ()=> document.getElementById('mobileMenu').classList.toggle('hidden'));
+
+  // pickers init & handlers
+  const brandPicker = document.getElementById('brandPicker');
+  const bgPicker = document.getElementById('bgPicker');
+
+  (function initPickers(){
+    const bg = localStorage.getItem(BG) || getComputedStyle(document.documentElement).getPropertyValue('--page-bg').trim();
+    const brand = localStorage.getItem(BRAND) || getComputedStyle(document.documentElement).getPropertyValue('--brand-500').trim();
+    if(bgPicker) bgPicker.value = toHex(bg);
+    if(brandPicker) brandPicker.value = toHex(brand);
+    if(bg) document.documentElement.style.setProperty('--page-bg', bg);
+    if(brand) document.documentElement.style.setProperty('--brand-500', brand);
+  })();
+
+  brandPicker?.addEventListener('input', function(){ document.documentElement.style.setProperty('--brand-500', this.value); localStorage.setItem(BRAND, this.value); });
+  bgPicker?.addEventListener('input', function(){ document.documentElement.style.setProperty('--page-bg', this.value); localStorage.setItem(BG, this.value); });
+
+  function toHex(val){
+    if(!val) return '#ffffff'; val = val.trim();
+    if(val.startsWith('rgb')){ const nums = val.replace(/rgba?\(|\)|\s+/g,'').split(','); const r = parseInt(nums[0]), g = parseInt(nums[1]), b = parseInt(nums[2]); return '#'+[r,g,b].map(n=>n.toString(16).padStart(2,'0')).join(''); }
+    if(/^#[0-9a-fA-F]{3}$/.test(val)) return '#' + val.slice(1).split('').map(c=>c+c).join('');
+    if(/^#[0-9a-fA-F]{6}$/.test(val)) return val; return '#ffffff';
+  }
+
+  document.getElementById('resetForm')?.addEventListener('submit', function(e){
+    e.preventDefault();
+    const p1 = (document.getElementById('newPass')||{}).value || '';
+    const p2 = (document.getElementById('confirmPass')||{}).value || '';
+    if(!p1 || !p2) return alert('Please enter password.');
+    if(p1 !== p2) return alert('Passwords do not match.');
+    alert('Password Reset Successful (demo). Redirecting to login...');
+    window.location.href = 'login.html';
+  });
+</script>
+</body>
+</html>

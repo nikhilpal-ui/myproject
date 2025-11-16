@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home — Stylish UI</title>
+
+  <script>
+    tailwind = { config:{ darkMode:"class" } };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root { --brand-500:#7b5bf0; }
+    html, body { transition: color .25s ease; }
+
+    /* Stable gradient background (manual control only) */
+    body {
+      background: linear-gradient(135deg, var(--page-bg,#ffffff), var(--brand-500));
+      background-size: cover;
+      background-attachment: fixed;
+    }
+
+    .glass {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.25);
+      transform: translateZ(0);
+    }
+
+    .neon { transition: box-shadow .2s ease; }
+    .neon:hover { box-shadow: 0 0 18px var(--brand-500); }
+
+    .btn-accent { background: var(--brand-500); color:#fff; }
+    .btn-outline { border-color:var(--brand-500); color:var(--brand-500); }
+  </style>
+
+  <!-- Apply saved theme & colors early -->
+  <script>
+    (function(){
+      const T='site-theme', BG='site-bgcolor', B='brand-color';
+      const th = localStorage.getItem(T) || "light";
+      document.documentElement.classList.toggle('dark', th==="dark");
+
+      const bg = localStorage.getItem(BG);
+      if(bg) document.documentElement.style.setProperty("--page-bg", bg);
+
+      const br = localStorage.getItem(B);
+      if(br) document.documentElement.style.setProperty("--brand-500", br);
+    })();
+  </script>
+</head>
+
+<body class="text-slate-900 dark:text-slate-100">
+
+<!-- NAVIGATION -->
+<nav class="glass shadow-lg sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+
+    <div class="flex items-center gap-6">
+      <a href="index.html" class="text-2xl font-extrabold">My Website</a>
+
+      <div class="hidden md:flex gap-5 text-sm">
+        <a href="index.html" class="font-semibold underline">Home</a>
+        <a href="dashboard.html" class="hover:underline">Dashboard</a>
+        <a href="profile.html" class="hover:underline">Profile</a>
+        <a href="charts.html" class="hover:underline">Charts</a>
+        <a href="settings.html" class="hover:underline">Settings</a>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <input id="brandPicker" type="color" class="w-8 h-8 rounded cursor-pointer" title="Brand Color">
+      <input id="bgPicker" type="color" class="w-8 h-8 rounded cursor-pointer" title="Background Color">
+
+      <button id="themeBtn" onclick="toggleTheme()" class="px-3 py-1 border rounded">🌙 Dark</button>
+
+      <button id="mobileToggle" class="md:hidden px-3 py-1 border rounded">☰</button>
+    </div>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div id="mobileMenu" class="hidden md:hidden p-4 space-y-3 glass">
+    <a href="index.html" class="block p-2 rounded hover:bg-white/10">Home</a>
+    <a href="dashboard.html" class="block p-2 rounded hover:bg-white/10">Dashboard</a>
+    <a href="profile.html" class="block p-2 rounded hover:bg-white/10">Profile</a>
+    <a href="charts.html" class="block p-2 rounded hover:bg-white/10">Charts</a>
+    <a href="settings.html" class="block p-2 rounded hover:bg-white/10">Settings</a>
+    <a href="login.html" class="block p-2 rounded hover:bg-white/10">Login</a>
+  </div>
+</nav>
+
+<!-- HERO SECTION -->
+<section class="max-w-7xl mx-auto px-6 py-20 text-center">
+  <h1 class="text-5xl md:text-6xl font-extrabold mb-6 drop-shadow-lg">
+    Welcome to <span style="color:var(--brand-500)">Your Stylish Website</span>
+  </h1>
+
+  <p class="max-w-2xl mx-auto text-lg opacity-90 mb-10">
+    Customize theme, background color & brand color instantly.  
+    Modern, glass, neon, responsive — built with Tailwind CSS.
+  </p>
+
+  <div class="flex justify-center gap-4 mt-6">
+    <a href="dashboard.html" class="px-6 py-3 rounded-xl btn-accent neon text-lg shadow-lg">
+      Open Dashboard
+    </a>
+
+    <a href="login.html" class="px-6 py-3 rounded-xl btn-outline border neon text-lg shadow">
+      Login
+    </a>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="max-w-7xl mx-auto px-6 pb-24 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+
+  <div class="glass p-6 rounded-2xl neon shadow-xl">
+    <h3 class="text-xl font-semibold mb-2">🎨 Theme Control</h3>
+    <p class="opacity-80 text-sm">Light & Dark theme fully synced across all pages.</p>
+  </div>
+
+  <div class="glass p-6 rounded-2xl neon shadow-xl">
+    <h3 class="text-xl font-semibold mb-2">🌈 Background Color</h3>
+    <p class="opacity-80 text-sm">Change background with color picker instantly.</p>
+  </div>
+
+  <div class="glass p-6 rounded-2xl neon shadow-xl">
+    <h3 class="text-xl font-semibold mb-2">🔥 Brand Accent</h3>
+    <p class="opacity-80 text-sm">Change website accent color live with picker.</p>
+  </div>
+
+</section>
+
+<footer class="py-6 text-center text-sm opacity-80">
+  © 2025 Stylish Homepage — Tailwind UI
+</footer>
+
+<!-- JS LOGIC -->
+<script>
+  const BG='site-bgcolor', BRAND='brand-color', THEME='site-theme';
+
+  function toggleTheme(){
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem(THEME, isDark ? "dark" : "light");
+    themeBtn.textContent = isDark ? "☀️ Light" : "🌙 Dark";
+  }
+
+  // Mobile menu toggle
+  mobileToggle.onclick = ()=> mobileMenu.classList.toggle('hidden');
+
+  // pickers
+  const bp = document.getElementById("brandPicker");
+  const bgp = document.getElementById("bgPicker");
+
+  function normalize(x){
+    if(!x) return "#ffffff";
+    x = x.trim();
+    if(x.startsWith("rgb")){
+      const n = x.replace(/rgba?\(|\)|\s+/g,'').split(',');
+      return "#"+
+        [parseInt(n[0]), parseInt(n[1]), parseInt(n[2])]
+        .map(v=>v.toString(16).padStart(2,'0'))
+        .join('');
+    }
+    if(/^#[0-9a-f]{3}$/i.test(x))
+      return "#"+x.slice(1).split('').map(c=>c+c).join('');
+    if(/^#[0-9a-f]{6}$/i.test(x)) return x;
+    return "#fff";
+  }
+
+  (function init(){
+    const bg = localStorage.getItem(BG) ||
+               getComputedStyle(document.documentElement).getPropertyValue("--page-bg");
+    const br = localStorage.getItem(BRAND) ||
+               getComputedStyle(document.documentElement).getPropertyValue("--brand-500");
+
+    bp.value = normalize(br);
+    bgp.value = normalize(bg);
+
+    document.documentElement.style.setProperty('--brand-500', bp.value);
+    document.documentElement.style.setProperty('--page-bg', bgp.value);
+
+    themeBtn.textContent =
+      (localStorage.getItem(THEME)==="dark") ? "☀️ Light" : "🌙 Dark";
+  })();
+
+  bp.oninput = function(){
+    document.documentElement.style.setProperty("--brand-500", this.value);
+    localStorage.setItem(BRAND, this.value);
+  }
+
+  bgp.oninput = function(){
+    document.documentElement.style.setProperty("--page-bg", this.value);
+    localStorage.setItem(BG, this.value);
+  }
+</script>
+
+</body>
+</html>

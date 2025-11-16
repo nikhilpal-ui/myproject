@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login — Stylish UI</title>
+
+  <!-- Tailwind -->
+  <script> tailwind = { config:{ darkMode:"class" } }; </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root { --brand-500:#7b5bf0; }
+    /* avoid background repaint jumps by only transitioning color */
+    html,body { transition: color .25s ease; }
+
+    /* STABLE background (controlled via picker only) */
+    body{
+      background: linear-gradient(135deg, var(--page-bg,#ffffff), var(--brand-500));
+      background-size: cover;
+      background-attachment: fixed;
+    }
+
+    .glass{
+      background: rgba(255,255,255,0.20);
+      border:1px solid rgba(255,255,255,0.3);
+      backdrop-filter: blur(14px);
+    }
+
+    .neon { transition: box-shadow .18s ease; transform:none; }
+    .neon:hover { box-shadow: 0 0 15px var(--brand-500); transform:none !important; }
+
+    .btn-accent{ background:var(--brand-500); color:white; }
+  </style>
+
+  <!-- init saved theme/colors early -->
+  <script>
+    (function(){
+      const THEME='site-theme', BG='site-bgcolor', BRAND='brand-color';
+      const savedTheme = localStorage.getItem(THEME) || "light";
+      document.documentElement.classList.toggle('dark', savedTheme==="dark");
+
+      const bg = localStorage.getItem(BG);
+      if(bg) document.documentElement.style.setProperty("--page-bg", bg);
+
+      const brand = localStorage.getItem(BRAND);
+      if(brand) document.documentElement.style.setProperty("--brand-500", brand);
+    })();
+  </script>
+</head>
+
+<body class="text-slate-900 dark:text-slate-100">
+
+<nav class="glass shadow-lg sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+    <div class="text-2xl font-extrabold">My Website</div>
+
+    <div class="flex items-center gap-3">
+      <input id="brandPicker" type="color" class="w-8 h-8 cursor-pointer rounded" title="Accent color"/>
+      <input id="bgPicker" type="color" class="w-8 h-8 cursor-pointer rounded" title="Background color"/>
+      <button id="themeBtn" onclick="toggleTheme()" class="px-3 py-1 border rounded">🌙 Dark</button>
+      <button id="mobileToggle" class="md:hidden px-3 py-2 border rounded">☰</button>
+    </div>
+  </div>
+
+  <div id="mobileMenu" class="hidden md:hidden p-4 space-y-2 glass">
+    <a href="index.html" class="block p-2 rounded">Home</a>
+    <a href="register.html" class="block p-2 rounded">Register</a>
+  </div>
+</nav>
+
+<section class="flex justify-center items-center min-h-[80vh] px-4 py-10">
+  <div class="glass rounded-2xl p-10 w-full max-w-md shadow-xl neon">
+    <h1 class="text-3xl font-bold text-center mb-2">Welcome Back</h1>
+    <p class="text-center text-slate-700 dark:text-slate-300 mb-6">Login to access your dashboard</p>
+
+    <form>
+      <label class="text-sm opacity-90">Email</label>
+      <input type="email" placeholder="you@example.com" class="w-full mt-1 mb-4 p-3 rounded-lg bg-white/40 dark:bg-slate-800/40 border outline-none">
+
+      <label class="text-sm opacity-90">Password</label>
+      <input type="password" placeholder="Enter password" class="w-full mt-1 p-3 rounded-lg bg-white/40 dark:bg-slate-800/40 border outline-none">
+
+      <div class="text-right mt-2">
+        <a href="forgot.html" class="text-sm hover:underline">Forgot Password?</a>
+      </div>
+
+      <button type="button" onclick="loginNow()" class="w-full mt-6 py-3 rounded-lg btn-accent neon shadow-lg text-lg font-semibold">
+        Login
+      </button>
+    </form>
+
+    <p class="mt-6 text-center text-sm opacity-90">Don’t have an account? <a href="register.html" class="font-semibold hover:underline">Register</a></p>
+  </div>
+</section>
+
+<footer class="text-center py-6 opacity-70 text-sm">© 2025 Stylish Login — Tailwind UI</footer>
+
+<script>
+  const BG='site-bgcolor', BRAND='brand-color', THEME='site-theme';
+
+  function toggleTheme(){
+    const isDark = document.documentElement.classList.toggle("dark");
+    localStorage.setItem(THEME, isDark ? "dark" : "light");
+    if(document.getElementById('themeBtn')) document.getElementById('themeBtn').textContent = isDark ? "☀️ Light" : "🌙 Dark";
+  }
+
+  document.getElementById('mobileToggle')?.addEventListener('click', ()=> document.getElementById('mobileMenu').classList.toggle('hidden'));
+
+  // pickers
+  const brandPicker = document.getElementById('brandPicker');
+  const bgPicker = document.getElementById('bgPicker');
+
+  // init picker values from saved css var / localStorage
+  (function initPickers(){
+    const savedB = localStorage.getItem(BRAND) || getComputedStyle(document.documentElement).getPropertyValue('--brand-500').trim() || '#7b5bf0';
+    const savedBg = localStorage.getItem(BG) || getComputedStyle(document.documentElement).getPropertyValue('--page-bg').trim() || '#ffffff';
+    if(brandPicker) brandPicker.value = toHex(savedB);
+    if(bgPicker) bgPicker.value = toHex(savedBg);
+  })();
+
+  brandPicker?.addEventListener('input', function(){ document.documentElement.style.setProperty('--brand-500', this.value); localStorage.setItem(BRAND, this.value); });
+  bgPicker?.addEventListener('input', function(){ document.documentElement.style.setProperty('--page-bg', this.value); localStorage.setItem(BG, this.value); });
+
+  function toHex(val){
+    if(!val) return '#ffffff';
+    val = val.trim();
+    if(val.startsWith('rgb')) {
+      const nums = val.replace(/rgba?\(|\)|\s+/g,'').split(',');
+      const r = parseInt(nums[0]), g = parseInt(nums[1]), b = parseInt(nums[2]);
+      return '#'+[r,g,b].map(n=>n.toString(16).padStart(2,'0')).join('');
+    }
+    if(/^#[0-9a-fA-F]{3}$/.test(val)) return '#' + val.slice(1).split('').map(c=>c+c).join('');
+    if(/^#[0-9a-fA-F]{6}$/.test(val)) return val;
+    return '#ffffff';
+  }
+
+  function loginNow(){ window.location.href="dashboard.html"; }
+</script>
+</body>
+</html>

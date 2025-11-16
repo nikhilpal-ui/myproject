@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Settings — My Website</title>
+
+  <!-- Tailwind CDN (quick dev, not for production) -->
+  <script>
+    window.tailwind = window.tailwind || {};
+    // ensure class-based dark mode support for the CDN
+    window.tailwind.config = { darkMode: 'class' };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* smooth transition for background & color changes */
+    html, body { transition: background-color 220ms ease, color 220ms ease; }
+    /* keep the mobile menu above other elements when visible */
+    #mobileMenu { z-index: 60; }
+  </style>
+
+  <!-- Theme + background init script (runs early) -->
+  <script>
+    (function(){
+      const THEME_KEY = 'site-theme';        // "light" or "dark"
+      const BG_KEY    = 'site-bgcolor';      // custom bg color hex
+
+      const LIGHT = 'light', DARK = 'dark';
+
+      function getSavedTheme(){
+        const t = localStorage.getItem(THEME_KEY);
+        if(t) return t;
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? DARK : LIGHT;
+      }
+
+      function applyTheme(name){
+        document.documentElement.classList.toggle('dark', name === DARK);
+        // update button label later (UI script)
+        localStorage.setItem(THEME_KEY, name);
+      }
+
+      function getSavedBg(){
+        return localStorage.getItem(BG_KEY) || '';
+      }
+
+      function applyBg(color){
+        if(color){
+          document.documentElement.style.setProperty('--page-bg', color);
+          document.body.style.backgroundColor = color;
+        } else {
+          document.documentElement.style.removeProperty('--page-bg');
+          document.body.style.backgroundColor = '';
+        }
+        if(color) localStorage.setItem(BG_KEY, color); else localStorage.removeItem(BG_KEY);
+      }
+
+      // initialize theme & bg before content loads
+      applyTheme(getSavedTheme());
+      const savedBg = getSavedBg();
+      if(savedBg) applyBg(savedBg);
+
+      // expose toggle functions
+      window.toggleSiteTheme = function(){
+        const cur = localStorage.getItem(THEME_KEY) || getSavedTheme();
+        const next = (cur === DARK) ? LIGHT : DARK;
+        applyTheme(next);
+        updateThemeButtonLabel(next);
+      };
+
+      window.setBackgroundColor = function(hex){
+        applyBg(hex);
+        // reflect in UI
+        const cp = document.getElementById('bgColorPicker');
+        if(cp) cp.value = hex || '';
+      };
+
+      // helper to update label (defined later in DOM script)
+      window.updateThemeButtonLabel = function(name){
+        const btn = document.getElementById('theme-toggle');
+        if(btn) btn.textContent = name === DARK ? '☀️ Light' : '🌙 Dark';
+      };
+
+    })();
+  </script>
+</head>
+<body class="antialiased text-slate-900 dark:text-slate-100" style="background-color: var(--page-bg,);">
+
+  <!-- NAV -->
+  <nav class="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-b sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="flex items-center justify-between h-16">
+        <!-- left -->
+        <div class="flex items-center gap-4">
+          <a href="index.html" class="text-xl font-bold">My Website</a>
+          <div class="hidden md:flex space-x-4 text-sm">
+            <a href="dashboard.html" class="hover:underline">Dashboard</a>
+            <a href="profile.html" class="hover:underline">Profile</a>
+            <a href="charts.html" class="hover:underline">Charts</a>
+            <a href="settings.html" class="hover:underline font-semibold text-sky-600 dark:text-sky-400">Settings</a>
+          </div>
+        </div>
+
+        <!-- right -->
+        <div class="flex items-center gap-2">
+          <!-- background color picker -->
+          <label for="bgColorPicker" class="hidden sm:inline-flex items-center gap-2 text-sm px-2 py-1 rounded">
+            <span class="text-xs text-gray-600 dark:text-gray-300">Background</span>
+            <input id="bgColorPicker" type="color" value="#ffffff" class="w-8 h-8 p-0 border rounded" />
+          </label>
+
+          <!-- theme toggle -->
+          <button id="theme-toggle" onclick="toggleSiteTheme()" class="px-3 py-1 rounded border text-sm">
+            🌙 Dark
+          </button>
+
+          <!-- logout -->
+          <button id="logoutBtn" class="ml-2 px-3 py-1 rounded bg-red-500 text-white text-sm">Logout</button>
+
+          <!-- mobile menu button -->
+          <button id="mobile-btn" class="md:hidden ml-2 px-2 py-1 rounded border" aria-label="Open menu">☰</button>
+        </div>
+      </div>
+
+      <!-- mobile menu -->
+      <div id="mobileMenu" class="hidden md:hidden pb-4">
+        <div class="px-2 space-y-2">
+          <a href="dashboard.html" class="block p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Dashboard</a>
+          <a href="profile.html" class="block p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Profile</a>
+          <a href="charts.html" class="block p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Charts</a>
+          <a href="settings.html" class="block p-2 rounded bg-slate-100 dark:bg-slate-800">Settings</a>
+          <div class="flex items-center gap-2 p-2">
+            <button onclick="toggleSiteTheme()" class="px-3 py-1 rounded border text-sm">Theme</button>
+            <button id="m-logout" class="px-3 py-1 rounded border text-sm" onclick="logoutUser()">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="max-w-5xl mx-auto p-6">
+    <header class="mb-6">
+      <h1 class="text-2xl font-bold">Settings</h1>
+      <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Manage your account, theme and preferences here.</p>
+    </header>
+
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- left: account -->
+      <div class="md:col-span-1 bg-white dark:bg-slate-800 border rounded-lg p-4">
+        <h2 class="font-semibold mb-2">Account</h2>
+        <div class="text-sm text-gray-600 dark:text-gray-300 space-y-3">
+          <div>
+            <div class="text-xs text-gray-500">Signed in as</div>
+            <div class="font-medium">nikhil@example.com</div>
+          </div>
+          <div class="flex gap-2">
+            <a href="profile.html" class="btn px-3 py-1 border rounded text-sm">Edit profile</a>
+            <button id="logoutBtn2" class="px-3 py-1 rounded text-sm border">Sign out</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- right: preferences -->
+      <div class="md:col-span-2 bg-white dark:bg-slate-800 border rounded-lg p-4 space-y-4">
+        <h2 class="font-semibold">Preferences</h2>
+
+        <!-- background color changer -->
+        <div class="flex items-center gap-4 flex-wrap">
+          <div class="w-full sm:w-auto">
+            <label class="text-sm block mb-1 text-gray-600 dark:text-gray-300">Change page background</label>
+            <div class="flex items-center gap-3">
+              <input id="bgColorPickerMain" type="color" value="#ffffff" class="w-10 h-10 p-0 border rounded" title="Pick background color" />
+              <button id="resetBg" class="px-3 py-1 rounded border text-sm">Reset</button>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Pick any color to change the page background. Saved in your browser.</p>
+          </div>
+
+          <!-- quick swatches -->
+          <div class="flex gap-2 items-center">
+            <div class="text-sm text-gray-600 dark:text-gray-300">Quick:</div>
+            <button class="swatch w-8 h-8 rounded" data-color="#ffffff" style="background:#ffffff;border:1px solid #ddd"></button>
+            <button class="swatch w-8 h-8 rounded" data-color="#f8fafc" style="background:#f8fafc;border:1px solid #ddd"></button>
+            <button class="swatch w-8 h-8 rounded" data-color="#f0fdf4" style="background:#f0fdf4;border:1px solid #ddd"></button>
+            <button class="swatch w-8 h-8 rounded" data-color="#0b1220" style="background:#0b1220;border:1px solid #222"></button>
+            <button class="swatch w-8 h-8 rounded" data-color="#0f172a" style="background:#0f172a;border:1px solid #222"></button>
+          </div>
+        </div>
+
+        <!-- other preferences -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="p-3 border rounded">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm text-gray-600 dark:text-gray-300">Receive newsletter</div>
+                <div class="text-xs text-gray-400">Get weekly updates</div>
+              </div>
+              <input id="newsletter" type="checkbox" checked class="w-5 h-5"/>
+            </div>
+          </div>
+
+          <div class="p-3 border rounded">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm text-gray-600 dark:text-gray-300">Compact layout</div>
+                <div class="text-xs text-gray-400">Reduce spacing for dense layout</div>
+              </div>
+              <input id="compact" type="checkbox" class="w-5 h-5"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+          <strong>Danger zone:</strong> sign out or clear preferences.
+          <div class="mt-2 flex gap-2">
+            <button id="clearPrefs" class="px-3 py-1 border rounded text-sm">Clear preferences</button>
+            <button id="signout" class="px-3 py-1 border rounded text-sm">Sign out</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+    © 2025 My Website
+  </footer>
+
+<script>
+  // MOBILE MENU TOGGLE
+  document.getElementById('mobile-btn')?.addEventListener('click', function(){
+    const m = document.getElementById('mobileMenu');
+    m.classList.toggle('hidden');
+  });
+
+  // THEME BUTTON LABEL update (initial)
+  window.updateThemeButtonLabel = function(name){
+    const btn = document.getElementById('theme-toggle');
+    if(btn) btn.textContent = name === 'dark' || document.documentElement.classList.contains('dark') ? '☀️ Light' : '🌙 Dark';
+  };
+  // ensure label reflects initial state:
+  updateThemeButtonLabel(localStorage.getItem('site-theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark':'light') );
+
+  // LOGOUT functions
+  function logoutUser(){
+    localStorage.clear();
+    // optionally call backend logout endpoint here
+    window.location.href = 'login.html';
+  }
+  document.getElementById('logoutBtn')?.addEventListener('click', logoutUser);
+  document.getElementById('logoutBtn2')?.addEventListener('click', logoutUser);
+  document.getElementById('m-logout')?.addEventListener('click', logoutUser);
+  document.getElementById('signout')?.addEventListener('click', logoutUser);
+
+  // BACKGROUND COLOR PICKERS (two pickers kept in sync)
+  const bgPickerTop = document.getElementById('bgColorPicker');
+  const bgPickerMain = document.getElementById('bgColorPickerMain');
+
+  function applyBgColor(hex){
+    if(!hex) {
+      document.documentElement.style.removeProperty('--page-bg');
+      document.body.style.backgroundColor = '';
+      localStorage.removeItem('site-bgcolor');
+      return;
+    }
+    document.documentElement.style.setProperty('--page-bg', hex);
+    document.body.style.backgroundColor = hex;
+    localStorage.setItem('site-bgcolor', hex);
+  }
+
+  // initialize pickers from saved value
+  const saved = localStorage.getItem('site-bgcolor');
+  if(saved){
+    if(bgPickerTop) bgPickerTop.value = saved;
+    if(bgPickerMain) bgPickerMain.value = saved;
+    applyBgColor(saved);
+  } else {
+    // ensure pickers reflect current computed background if any
+    try {
+      const computed = getComputedStyle(document.body).backgroundColor;
+      // leave default otherwise
+    } catch(e){}
+  }
+
+  [bgPickerTop, bgPickerMain].forEach(el=>{
+    if(!el) return;
+    el.addEventListener('input', function(){
+      applyBgColor(this.value);
+      if(bgPickerTop && bgPickerMain){
+        bgPickerTop.value = this.value;
+        bgPickerMain.value = this.value;
+      }
+    });
+  });
+
+  // reset button
+  document.getElementById('resetBg')?.addEventListener('click', function(){
+    applyBgColor('');
+    if(bgPickerTop) bgPickerTop.value = '#ffffff';
+    if(bgPickerMain) bgPickerMain.value = '#ffffff';
+  });
+
+  // quick swatches
+  document.querySelectorAll('.swatch').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      const c = this.getAttribute('data-color');
+      applyBgColor(c);
+      if(bgPickerTop) bgPickerTop.value = c;
+      if(bgPickerMain) bgPickerMain.value = c;
+    });
+  });
+
+  // other small prefs
+  document.getElementById('newsletter')?.addEventListener('change', function(){
+    localStorage.setItem('pref-newsletter', this.checked ? '1' : '0');
+    alert('Newsletter preference saved (demo).');
+  });
+  document.getElementById('compact')?.addEventListener('change', function(){
+    localStorage.setItem('pref-compact', this.checked ? '1' : '0');
+    document.body.classList.toggle('compact', this.checked);
+  });
+
+  // clear preferences
+  document.getElementById('clearPrefs')?.addEventListener('click', function(){
+    if(confirm('Clear local preferences (theme, bg color, prefs)?')){
+      localStorage.removeItem('site-theme');
+      localStorage.removeItem('site-bgcolor');
+      localStorage.removeItem('pref-newsletter');
+      localStorage.removeItem('pref-compact');
+      location.reload();
+    }
+  });
+
+</script>
+</body>
+</html>

@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Charts — Final (Line, Bar, Pie, Doughnut)</title>
+
+  <script>
+    tailwind = { config: { darkMode: "class" } };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root { --brand-500: #7b5bf0; }
+    /* avoid background repaint jumps by only transitioning color (not background) */
+    html, body { transition: color .25s ease; }
+
+    /* stable gradient background (controlled via picker) */
+    body {
+      background: linear-gradient(135deg, var(--page-bg,#ffffff), var(--brand-500));
+      background-size: cover;
+      background-attachment: fixed;
+    }
+
+    .glass {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.25);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      transform: translateZ(0);
+    }
+
+    /* prevent card shift on hover (only glow) */
+    .neon {
+      transition: box-shadow .18s ease;
+      transform: none;
+    }
+    .neon:hover {
+      transform: none !important;
+      box-shadow: 0 0 12px var(--brand-500);
+    }
+
+    .chart-card { min-height: 300px; }
+
+    /* stabilize canvas sizing to prevent Chart.js reflow jumps */
+    .chart-card canvas {
+      display: block;
+      width: 100% !important;
+      height: 320px !important;
+      max-width: 100%;
+    }
+
+    .btn-accent { background: var(--brand-500); color: #fff; }
+  </style>
+
+  <script>
+    (function(){
+      const T='site-theme', B='site-bgcolor', C='brand-color';
+      const savedTheme = localStorage.getItem(T) || 'light';
+      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+
+      // apply saved values before paint
+      const bg = localStorage.getItem(B);
+      if(bg) document.documentElement.style.setProperty('--page-bg', bg);
+
+      const br = localStorage.getItem(C);
+      if(br) document.documentElement.style.setProperty('--brand-500', br);
+    })();
+  </script>
+</head>
+<body class="text-slate-900 dark:text-slate-100">
+
+<!-- NAV -->
+<nav class="glass shadow-lg sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-6">
+      <a href="index.html" class="text-2xl font-extrabold">My Website</a>
+      <div class="hidden md:flex gap-5 text-sm">
+        <a href="dashboard.html" class="hover:underline">Dashboard</a>
+        <a href="profile.html" class="hover:underline">Profile</a>
+        <a href="charts.html" class="underline font-bold">Charts</a>
+        <a href="settings.html" class="hover:underline">Settings</a>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <input id="brandPicker" type="color" class="w-8 h-8 cursor-pointer rounded" title="Brand color"/>
+      <input id="bgPicker" type="color" class="w-8 h-8 cursor-pointer rounded" title="Background color"/>
+
+      <button id="themeBtn" onclick="toggleTheme()" class="px-3 py-1 border rounded">
+        🌙 Dark
+      </button>
+
+      <button onclick="logoutUser()" class="px-3 py-1 bg-red-600 text-white rounded">Logout</button>
+
+      <button id="mobileToggle" class="md:hidden px-3 py-2 border rounded">☰</button>
+    </div>
+  </div>
+
+  <div id="mobileMenu" class="hidden md:hidden p-4 space-y-2 glass">
+    <a href="dashboard.html" class="block p-2">Dashboard</a>
+    <a href="profile.html" class="block p-2">Profile</a>
+    <a href="charts.html" class="block p-2">Charts</a>
+    <a href="settings.html" class="block p-2">Settings</a>
+  </div>
+</nav>
+
+<!-- HEADER -->
+<section class="py-12 text-center">
+  <h1 class="text-4xl md:text-5xl font-extrabold">📊 Final Charts</h1>
+  <p class="text-lg mt-3 opacity-90">Line, Bar, Pie, Doughnut — animations off, stable layout, controlled background.</p>
+</section>
+
+<!-- CHARTS GRID -->
+<section class="max-w-6xl mx-auto px-4 pb-20 grid gap-8">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- LINE -->
+    <div class="glass p-6 rounded-2xl neon chart-card shadow-md">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-semibold">Sales Trend (Line)</h3>
+        <div class="text-sm opacity-80">Last 12 months</div>
+      </div>
+      <canvas id="lineChart" class="w-full"></canvas>
+      <div class="mt-4 flex justify-end gap-3">
+        <button id="exportLineBtn" class="px-3 py-1 rounded border text-sm">Export PNG</button>
+      </div>
+    </div>
+
+    <!-- BAR -->
+    <div class="glass p-6 rounded-2xl neon chart-card shadow-md">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-semibold">Orders by Channel (Bar)</h3>
+        <div class="text-sm opacity-80">This Quarter</div>
+      </div>
+      <canvas id="barChart" class="w-full"></canvas>
+      <div class="mt-4 flex justify-end gap-3">
+        <button id="exportBarBtn" class="px-3 py-1 rounded border text-sm">Export PNG</button>
+      </div>
+    </div>
+
+    <!-- PIE -->
+    <div class="glass p-6 rounded-2xl neon chart-card shadow-md">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-semibold">Traffic Sources (Pie)</h3>
+        <button id="exportPieBtn" class="px-3 py-1 rounded border text-sm">Export PNG</button>
+      </div>
+      <canvas id="pieChart" class="w-full"></canvas>
+    </div>
+
+    <!-- DOUGHNUT -->
+    <div class="glass p-6 rounded-2xl neon chart-card shadow-md">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-semibold">Users by Device (Doughnut)</h3>
+        <button id="exportDoughnutBtn" class="px-3 py-1 rounded border text-sm">Export PNG</button>
+      </div>
+      <canvas id="doughnutChart" class="w-full"></canvas>
+    </div>
+
+  </div>
+
+  <!-- KPI row -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4">
+    <div class="glass p-6 rounded-xl neon text-center">
+      <h4 class="text-sm opacity-80">Active Users</h4>
+      <div class="text-3xl font-extrabold mt-2">4,512</div>
+    </div>
+    <div class="glass p-6 rounded-xl neon text-center">
+      <h4 class="text-sm opacity-80">Revenue</h4>
+      <div class="text-3xl font-extrabold mt-2">$12.4k</div>
+    </div>
+    <div class="glass p-6 rounded-xl neon text-center">
+      <h4 class="text-sm opacity-80">Conversion</h4>
+      <div class="text-3xl font-extrabold mt-2">3.2%</div>
+    </div>
+  </div>
+</section>
+
+<footer class="text-center py-6 opacity-70 text-sm">
+  © 2025 Stylish Charts — Tailwind UI
+</footer>
+
+<!-- SCRIPTS -->
+<script>
+  const BG='site-bgcolor', BRAND='brand-color', THEME='site-theme';
+
+  function toggleTheme(){
+    const isDark = document.documentElement.classList.toggle("dark");
+    localStorage.setItem(THEME, isDark ? "dark" : "light");
+    themeBtn.textContent = isDark ? "☀️ Light" : "🌙 Dark";
+  }
+
+  function logoutUser(){
+    localStorage.clear();
+    window.location.href = "login.html";
+  }
+
+  mobileToggle.onclick = () => mobileMenu.classList.toggle("hidden");
+
+  // --- pickers setup ---
+  const brandPickerEl = document.getElementById('brandPicker');
+  const bgPickerEl = document.getElementById('bgPicker');
+
+  function getCssVar(name, fallback){
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name);
+    return v ? v.trim() : fallback;
+  }
+
+  function rgbOrHexToHex(val){
+    if(!val) return '#ffffff';
+    val = val.trim();
+    if(val.startsWith('rgb')) {
+      const nums = val.replace(/rgba?\(|\)|\s+/g,'').split(',');
+      const r = parseInt(nums[0]), g = parseInt(nums[1]), b = parseInt(nums[2]);
+      return '#'+[r,g,b].map(n=>n.toString(16).padStart(2,'0')).join('');
+    }
+    if(/^#[0-9a-fA-F]{3}$/.test(val)){
+      return '#' + val.slice(1).split('').map(c=>c+c).join('');
+    }
+    if(/^#[0-9a-fA-F]{6}$/.test(val)) return val;
+    return '#ffffff';
+  }
+
+  const savedBrand = localStorage.getItem(BRAND) || getCssVar('--brand-500', '#7b5bf0');
+  const savedBg    = localStorage.getItem(BG) || getCssVar('--page-bg', '#ffffff');
+
+  brandPickerEl.value = rgbOrHexToHex(savedBrand);
+  bgPickerEl.value    = rgbOrHexToHex(savedBg);
+
+  // apply initial
+  document.documentElement.style.setProperty('--brand-500', brandPickerEl.value);
+  document.documentElement.style.setProperty('--page-bg', bgPickerEl.value);
+
+  brandPickerEl.addEventListener('input', function(){
+    const val = this.value;
+    document.documentElement.style.setProperty('--brand-500', val);
+    localStorage.setItem(BRAND, val);
+    updateAllChartColors(val);
+  });
+
+  bgPickerEl.addEventListener('input', function(){
+    const val = this.value;
+    document.documentElement.style.setProperty('--page-bg', val);
+    localStorage.setItem(BG, val);
+  });
+
+  // helpers for colors
+  function hexToRgba(hex, alpha){
+    const h = hex.replace('#','');
+    const full = h.length===3 ? h.split('').map(c=>c+c).join('') : h;
+    const bigint = parseInt(full, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  function getBrandColor(){ return getComputedStyle(document.documentElement).getPropertyValue('--brand-500').trim() || '#7b5bf0'; }
+
+  // --- Chart data ---
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const salesData = [1200,1500,1400,1700,2000,2200,2100,2300,2400,2600,2800,3000];
+
+  // create charts (animations OFF)
+  const lineCtx = document.getElementById('lineChart').getContext('2d');
+  const barCtx  = document.getElementById('barChart').getContext('2d');
+  const pieCtx  = document.getElementById('pieChart').getContext('2d');
+  const doughCtx = document.getElementById('doughnutChart').getContext('2d');
+
+  const brand = getBrandColor();
+
+  const lineChart = new Chart(lineCtx, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [{
+        label: 'Sales',
+        data: salesData,
+        borderWidth: 3,
+        tension: 0.3,
+        borderColor: brand,
+        backgroundColor: hexToRgba(brand, 0.12),
+        pointBackgroundColor: brand,
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: { legend: { display: true } },
+      scales: { x: { grid: { display: false } }, y: { grid: { opacity: 0.06 } } }
+    }
+  });
+
+  const barChart = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Organic','Paid','Referral','Social'],
+      datasets: [{
+        label: 'Orders',
+        data: [120,210,90,150],
+        borderRadius: 8,
+        backgroundColor: [
+          brand,
+          hexToRgba(brand, 0.8),
+          hexToRgba(brand, 0.6),
+          hexToRgba(brand, 0.4)
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { display: false } }, y: { grid: { opacity: 0.06 } } }
+    }
+  });
+
+  const pieChart = new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+      labels: ['Google','Instagram','Facebook','Direct'],
+      datasets: [{
+        data: [40,25,20,15],
+        backgroundColor: [
+          brand,
+          hexToRgba(brand, 0.8),
+          hexToRgba(brand, 0.6),
+          hexToRgba(brand, 0.4)
+        ],
+        borderWidth: 0
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, animation: false }
+  });
+
+  const doughnutChart = new Chart(doughCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Mobile','Laptop','Tablet'],
+      datasets: [{
+        data: [55,35,10],
+        backgroundColor: [
+          brand,
+          hexToRgba(brand, 0.7),
+          hexToRgba(brand, 0.4)
+        ],
+        borderWidth: 0
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, animation: false, cutout: '55%' }
+  });
+
+  // Update all charts' colors
+  function updateAllChartColors(newHex){
+    try {
+      // line
+      lineChart.data.datasets[0].borderColor = newHex;
+      lineChart.data.datasets[0].backgroundColor = hexToRgba(newHex, 0.12);
+      lineChart.data.datasets[0].pointBackgroundColor = newHex;
+      lineChart.update();
+
+      // bar
+      barChart.data.datasets[0].backgroundColor = [
+        newHex,
+        hexToRgba(newHex, 0.8),
+        hexToRgba(newHex, 0.6),
+        hexToRgba(newHex, 0.4)
+      ];
+      barChart.update();
+
+      // pie
+      pieChart.data.datasets[0].backgroundColor = [
+        newHex,
+        hexToRgba(newHex, 0.8),
+        hexToRgba(newHex, 0.6),
+        hexToRgba(newHex, 0.4)
+      ];
+      pieChart.update();
+
+      // doughnut
+      doughnutChart.data.datasets[0].backgroundColor = [
+        newHex,
+        hexToRgba(newHex, 0.7),
+        hexToRgba(newHex, 0.4)
+      ];
+      doughnutChart.update();
+    } catch(e){
+      console.warn('chart color update error', e);
+    }
+  }
+
+  // Export helpers
+  function downloadURI(uri, name){
+    const link = document.createElement('a');
+    link.href = uri;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
+  document.getElementById('exportLineBtn').addEventListener('click', () => {
+    try { downloadURI(lineChart.toBase64Image(), `sales-line-${Date.now()}.png`); } catch(e){ alert('Export failed'); }
+  });
+  document.getElementById('exportBarBtn').addEventListener('click', () => {
+    try { downloadURI(barChart.toBase64Image(), `orders-bar-${Date.now()}.png`); } catch(e){ alert('Export failed'); }
+  });
+  document.getElementById('exportPieBtn').addEventListener('click', () => {
+    try { downloadURI(pieChart.toBase64Image(), `traffic-pie-${Date.now()}.png`); } catch(e){ alert('Export failed'); }
+  });
+  document.getElementById('exportDoughnutBtn').addEventListener('click', () => {
+    try { downloadURI(doughnutChart.toBase64Image(), `users-doughnut-${Date.now()}.png`); } catch(e){ alert('Export failed'); }
+  });
+
+  // Resize charts after paint to ensure stable sizing
+  window.requestAnimationFrame(() => {
+    try { lineChart.resize(); barChart.resize(); pieChart.resize(); doughnutChart.resize(); } catch(e){/*ignore*/ }
+  });
+
+  // On load, ensure saved brand color is applied (in case CSS var set earlier)
+  window.addEventListener('load', () => {
+    const saved = localStorage.getItem(BRAND);
+    if(saved) updateAllChartColors(saved);
+  });
+
+</script>
+</body>
+</html>
